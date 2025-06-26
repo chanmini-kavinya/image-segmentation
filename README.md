@@ -25,7 +25,8 @@ python otsu_thresholding.py
 ## 2. Region Growing Segmentation
 
 - Implements a pixel-based region-growing algorithm.
-- Starts from a user-defined seed point and includes pixels within a defined intensity threshold.
+- Starts from a set of user-defined seed points and recursively includes neighboring pixels.
+- Pixels are added to a region if their intensity is within a defined threshold of the respective seed's value.
 
 ### To Run:
 ```bash
