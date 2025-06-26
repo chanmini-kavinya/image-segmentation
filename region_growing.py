@@ -3,48 +3,51 @@ import cv2
 import matplotlib.pyplot as plt
 from collections import deque
 
-def region_growing(img, seed, threshold):
+def region_growing(img, seed_points, threshold):
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    
+
     h, w = img.shape
     segmented = np.zeros((h, w), dtype=np.uint8)
-    
+    visited = np.zeros((h, w), dtype=bool)
+
     neighbors = [(-1,-1), (-1,0), (-1,1),
                  (0,-1),          (0,1),
                  (1,-1),  (1,0), (1,1)]
-    
-    x, y = seed
-    seed_value = img[y, x]
-    
+
     queue = deque()
-    queue.append((x, y))
-    segmented[y, x] = 255
     
+    for seed in seed_points:
+        x, y = seed
+        seed_value = img[y, x]
+        queue.append((x, y, seed_value))
+        segmented[y, x] = 255
+        visited[y, x] = True
+
     while queue:
-        x, y = queue.popleft()
-        
+        x, y, seed_value = queue.popleft()
+
         for dx, dy in neighbors:
             nx, ny = x + dx, y + dy
-            
-            if 0 <= nx < w and 0 <= ny < h:
-                if segmented[ny, nx] == 0:
-                    if abs(int(img[ny, nx]) - int(seed_value)) <= threshold:
-                        segmented[ny, nx] = 255
-                        queue.append((nx, ny))
-    
+
+            if 0 <= nx < w and 0 <= ny < h and not visited[ny, nx]:
+                if abs(int(img[ny, nx]) - int(seed_value)) <= threshold:
+                    segmented[ny, nx] = 255
+                    visited[ny, nx] = True
+                    queue.append((nx, ny, seed_value))
+
     return segmented
 
 def main():
     image = cv2.imread('image.jpg', cv2.IMREAD_GRAYSCALE)
-    seed_point = (170, 100)  
-    threshold = 20
-    segmented = region_growing(image, seed_point, threshold)
+    seed_points = [(170, 290), (110, 110)] 
+    threshold = 15
+    segmented = region_growing(image, seed_points, threshold)
 
     plt.figure(figsize=(15, 5))
     plt.subplot(131), plt.imshow(image, cmap='gray'), plt.title('Original Image')
     plt.subplot(132), plt.imshow(image, cmap='gray')
-    plt.plot(seed_point[0], seed_point[1], 'ro'), plt.title('Seed Point')
+    plt.plot(seed_points[0], seed_points[1], 'ro'), plt.title('Seed Points')
     plt.subplot(133), plt.imshow(segmented, cmap='gray'), plt.title('Region Growing Result')
     plt.show()
 
